@@ -33,8 +33,8 @@ sudo docker push srahangdale/node-docker-app
 ###Pulling and Running Image###
 docker pull image-name
 
-docker run -p 8080:3000 -d srahangdale/node-docker-app
+docker run -p 8000:3000 -d srahangdale/node-docker-app
 
-http://localhost:8080
+http://localhost:8000
 
 
