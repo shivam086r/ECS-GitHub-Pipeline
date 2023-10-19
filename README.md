@@ -27,6 +27,7 @@ sudo systemctl start docker
 sudo docker --version
 
 ### Building and pushing image ####
+
 sudo docker build -t srahangdale/node-docker-app .
 
 sudo docker login
@@ -34,6 +35,7 @@ sudo docker login
 sudo docker push srahangdale/node-docker-app
 
 ###Pulling and Running Image###
+
 docker pull image-name
 
 docker run -p 8000:3000 -d srahangdale/node-docker-app
