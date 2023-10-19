@@ -3,6 +3,7 @@
 ### docker installation###
 
 sudo apt update
+
 sudo apt upgrade
 
 ####Install Required Dependencies####
@@ -28,3 +29,11 @@ docker build -t your-dockerhub-username/node-docker-app .
 docker login
 
 docker push your-dockerhub-username/node-docker-app
+
+docker pull image-name
+
+docker run -p 8080:3000 -d your-dockerhub-username/node-docker-app
+
+http://localhost:8080
+
+
