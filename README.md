@@ -37,11 +37,11 @@ sudo chmod 666 /var/run/docker.sock
 
 ### Building and pushing image ####
 
-sudo docker build -t srahangdale/node-docker-app .
+docker build -t srahangdale/node-docker-app .
 
-sudo docker login
+docker login
 
-sudo docker push srahangdale/node-docker-app
+docker push srahangdale/node-docker-app
 
 ###Pulling and Running Image###
 
