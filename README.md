@@ -25,6 +25,10 @@ sudo systemctl enable docker
 sudo systemctl start docker
 
 sudo docker --version
+sudo groupadd docker
+sudo usermod -aG docker gammastack
+sudo chmod 666 /var/run/docker.sock
+
 
 ### Building and pushing image ####
 
