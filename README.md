@@ -30,9 +30,9 @@ docker login
 
 docker push your-dockerhub-username/node-docker-app
 
+###Pulling and Running Image###
 docker pull image-name
 
-###Running Image###
 docker run -p 8080:3000 -d your-dockerhub-username/node-docker-app
 
 http://localhost:8080
