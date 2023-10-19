@@ -24,16 +24,16 @@ sudo systemctl start docker
 sudo docker --version
 
 ### Building and pushing image ####
-docker build -t your-dockerhub-username/node-docker-app .
+sudo docker build -t srahangdale/node-docker-app .
 
-docker login
+sudo docker login
 
-docker push your-dockerhub-username/node-docker-app
+sudo docker push srahangdale/node-docker-app
 
 ###Pulling and Running Image###
 docker pull image-name
 
-docker run -p 8080:3000 -d your-dockerhub-username/node-docker-app
+docker run -p 8080:3000 -d srahangdale/node-docker-app
 
 http://localhost:8080
 
