@@ -19,14 +19,19 @@ echo "deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://dow
  ####Install Docker ###
  
 sudo apt update
+
 sudo apt install docker-ce docker-ce-cli containerd.io
 
 sudo systemctl enable docker
+
 sudo systemctl start docker
 
 sudo docker --version
+
 sudo groupadd docker
+
 sudo usermod -aG docker gammastack
+
 sudo chmod 666 /var/run/docker.sock
 
 
