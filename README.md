@@ -1,5 +1,10 @@
 # nodejs-deployment-on-dockerhub-via-dockerfile
 
+git clone https://github.com/shivam086r/nodejs-deployment-on-dockerhub-via-dockerfile.git
+
+cd nodejs-deployment-on-dockerhub-via-dockerfile
+
+
 ### docker installation###
 
 sudo apt update
@@ -33,6 +38,7 @@ sudo groupadd docker
 sudo usermod -aG docker gammastack
 
 sudo chmod 666 /var/run/docker.sock
+
 
 
 ### Building and pushing image ####
