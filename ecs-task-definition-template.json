@@ -1,5 +1,5 @@
 {
-  "family": "my-task-definition",
+  "family": "practice-task-defination",
   "containerDefinitions": [
     {
       "name": "practice-container",
