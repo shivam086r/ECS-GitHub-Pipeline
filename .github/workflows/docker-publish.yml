@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up AWS credentials (hardcode the region here)
+      # Set up AWS credentials
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -39,60 +39,6 @@ jobs:
         run: |
           docker tag ${{ secrets.ECR_REPOSITORY_URI }}:latest ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
           docker push ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
-
-      # Create Task Execution Role
-      - name: Create ECS Task Execution Role
-        id: create-execution-role
-        run: |
-          role_name="ecsTaskExecutionRole"
-          trust_policy=$(cat <<EOF
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Effect": "Allow",
-                "Principal": {
-                  "Service": "ecs-tasks.amazonaws.com"
-                },
-                "Action": "sts:AssumeRole"
-              }
-            ]
-          }
-          EOF
-          )
-          # Create the execution role
-          role_arn=$(aws iam create-role --role-name $role_name --assume-role-policy-document "$trust_policy" --query "Role.Arn" --output text)
-          echo "Execution role ARN: $role_arn"
-          # Attach required policy
-          aws iam attach-role-policy --role-name $role_name --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-          echo "::set-output name=execution_role_arn::$role_arn"
-
-      # Create Task Role
-      - name: Create ECS Task Role
-        id: create-task-role
-        run: |
-          role_name="ecsTaskRole"
-          trust_policy=$(cat <<EOF
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Effect": "Allow",
-                "Principal": {
-                  "Service": "ecs-tasks.amazonaws.com"
-                },
-                "Action": "sts:AssumeRole"
-              }
-            ]
-          }
-          EOF
-          )
-          # Create the task role
-          role_arn=$(aws iam create-role --role-name $role_name --assume-role-policy-document "$trust_policy" --query "Role.Arn" --output text)
-          echo "Task role ARN: $role_arn"
-          # Attach any additional policies as needed (e.g., DynamoDB access)
-          aws iam attach-role-policy --role-name $role_name --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-          echo "::set-output name=task_role_arn::$role_arn"
 
       # Register ECS Task Definition
       - name: Register ECS Task Definition
@@ -121,8 +67,8 @@ jobs:
             "requiresCompatibilities": ["FARGATE"],
             "cpu": "256",
             "memory": "512",
-            "executionRoleArn": "${{ steps.create-execution-role.outputs.execution_role_arn }}",
-            "taskRoleArn": "${{ steps.create-task-role.outputs.task_role_arn }}"
+            "executionRoleArn": "${{ secrets.ECS_EXECUTION_ROLE_ARN }}",
+            "taskRoleArn": "${{ secrets.ECS_TASK_ROLE_ARN }}"
           }
           EOF
           )
@@ -140,5 +86,5 @@ jobs:
             --task-definition ${{ steps.register-task.outputs.task_definition_arn }} \
             --desired-count 1 \
             --launch-type FARGATE \
-            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.ECS_SUBNET_ID }}],securityGroups=[${{ secrets.ECS_SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.ECS_SUBNET_IDS }}],securityGroups=[${{ secrets.ECS_SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
             --force-new-deployment
