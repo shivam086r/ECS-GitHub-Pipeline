@@ -8,7 +8,7 @@
   "containerDefinitions": [
     {
       "name": "practice-container",
-      "image": "${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}",
+      "image": "637423375178.dkr.ecr.us-east-1.amazonaws.com/practice:8e624d102f0eb111d72324f60825b9ee62d51cde",
       "essential": true,
       "memory": 1024,
       "cpu": 512,
