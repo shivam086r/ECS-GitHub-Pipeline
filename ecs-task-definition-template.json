@@ -1,13 +1,13 @@
 {
   "family": "practice-task-defination",
   "networkMode": "awsvpc",  
-  "requiresCompatibilities": ["FARGATE"],  
+  "requiresCompatibilities": ["FARGATE"], 
+  "executionRoleArn": "arn:aws:iam::637423375178:role/ECSTaskExecutionRole",
   "cpu": "512",
   "memory": "1024",
   "containerDefinitions": [
     {
       "name": "practice-container",
-      "executionRoleArn": "arn:aws:iam::637423375178:role/ECSTaskExecutionRole",
       "image": "${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}",
       "essential": true,
       "memory": 1024,
