@@ -1,26 +1,40 @@
-name: Deploy to ECS
+name: Build and Push Docker Image to ECR
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger the action on push to main branch (adjust as needed)
+  pull_request:
+    branches:
+      - main  # Optional: Trigger action on PR to main branch
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Check out the repo
+    # Checkout the code
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+    # Set up AWS credentials (hardcode the region here)
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: 'us-east-1'  # Hardcoded region (replace with your region)
 
+    # Log in to Amazon ECR
     - name: Log in to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build and push Docker image to ECR
+    # Build Docker image
+    - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
-        docker tag ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
-        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+        docker build -t ${{ secrets.ECR_REPOSITORY }} .
+    # Push Docker image to ECR
+    - name: Push Docker image to ECR
+      run: |
+        docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+        docker push ${{ secrets.ECR_REPOSITORYF }}:${{ github.sha }}
