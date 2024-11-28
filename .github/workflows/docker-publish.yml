@@ -1,82 +1,144 @@
-name: Build and Push Docker Image to ECR
+name: Build, Push Docker Image to ECR, and Deploy to ECS
 
 on:
   push:
     branches:
-      - main  # Trigger the action on push to main branch (adjust as needed)
+      - main  # Trigger on push to main branch (adjust as needed)
   pull_request:
     branches:
-      - main  # Optional: Trigger action on PR to main branch
+      - main  # Optional: Trigger on PR to main branch
 
 jobs:
-  build:
+  build_and_deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    # Checkout the code
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Set up AWS credentials (hardcode the region here)
-    - name: Set up AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: 'us-east-1'  # Hardcoded region (replace with your region)
+      # Set up AWS credentials (hardcode the region here)
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-west-2'  # Hardcoded region (replace with your region)
 
-    # Log in to Amazon ECR
-    - name: Log in to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
+      # Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
 
-    # Build Docker image
-    - name: Build Docker image
-      run: |
-        docker build -t ${{ secrets.ECR_REPOSITORY_URI }} .
-    # Push Docker image to ECR
-    - name: Push Docker image to ECR
-      run: |
-        docker tag ${{ secrets.ECR_REPOSITORY_URI }}:latest ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
-        docker push ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
-     # Register new ECS task definition for Fargate
-    - name: Register new ECS task definition
-      id: register_task_definition
-      run: |
-        TASK_DEFINITION_ARN=$(aws ecs register-task-definition \
-          --family my-task-def \
-          --container-definitions "[{
-            \"name\": \"my-container\",
-            \"image\": \"${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}\",
-            \"cpu\": 256,
-            \"memory\": 512,
-            \"essential\": true,
-            \"portMappings\": [{
-              \"containerPort\": 3000,
-              \"hostPort\": 3000,
-              \"protocol\": \"tcp\"
-            }]
-          }]" \
-          --requires-compatibilities FARGATE \
-          --cpu 256 \
-          --memory 512 \
-          --network-mode awsvpc \
-          --query 'taskDefinition.taskDefinitionArn' \
-          --output text)
-        
-        echo "Registered ECS Task Definition: $TASK_DEFINITION_ARN"
-        echo "TASK_DEFINITION_ARN=$TASK_DEFINITION_ARN" >> $GITHUB_ENV
+      # Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.ECR_REPOSITORY_URI }} .
 
-    # Update ECS service to use the new Fargate-compatible task definition
-    - name: Update ECS service with new task definition
-      run: |
-        ecs_service_name="my-ecs-service"
-        ecs_cluster_name="my-ecs-cluster"
-        
-        # Update the ECS service to use the new Fargate-compatible task definition
-        aws ecs update-service \
-          --cluster $ecs_cluster_name \
-          --service $ecs_service_name \
-          --task-definition ${{ env.TASK_DEFINITION_ARN }} \
-          --desired-count 1  # You can adjust the desired count based on your needs
-        
-        echo "ECS service updated with new task definition"
+      # Push Docker image to ECR
+      - name: Push Docker image to ECR
+        run: |
+          docker tag ${{ secrets.ECR_REPOSITORY_URI }}:latest ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
+          docker push ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
+
+      # Create Task Execution Role
+      - name: Create ECS Task Execution Role
+        id: create-execution-role
+        run: |
+          role_name="ecsTaskExecutionRole"
+          trust_policy=$(cat <<EOF
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "ecs-tasks.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+              }
+            ]
+          }
+          EOF
+          )
+          # Create the execution role
+          role_arn=$(aws iam create-role --role-name $role_name --assume-role-policy-document "$trust_policy" --query "Role.Arn" --output text)
+          echo "Execution role ARN: $role_arn"
+          # Attach required policy
+          aws iam attach-role-policy --role-name $role_name --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+          echo "::set-output name=execution_role_arn::$role_arn"
+
+      # Create Task Role
+      - name: Create ECS Task Role
+        id: create-task-role
+        run: |
+          role_name="ecsTaskRole"
+          trust_policy=$(cat <<EOF
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "ecs-tasks.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+              }
+            ]
+          }
+          EOF
+          )
+          # Create the task role
+          role_arn=$(aws iam create-role --role-name $role_name --assume-role-policy-document "$trust_policy" --query "Role.Arn" --output text)
+          echo "Task role ARN: $role_arn"
+          # Attach any additional policies as needed (e.g., DynamoDB access)
+          aws iam attach-role-policy --role-name $role_name --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+          echo "::set-output name=task_role_arn::$role_arn"
+
+      # Register ECS Task Definition
+      - name: Register ECS Task Definition
+        id: register-task
+        run: |
+          task_definition=$(cat <<EOF
+          {
+            "family": "${{ secrets.ECS_TASK_FAMILY }}",
+            "networkMode": "awsvpc",
+            "containerDefinitions": [
+              {
+                "name": "my-container",
+                "image": "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}",
+                "memory": 512,
+                "cpu": 256,
+                "essential": true,
+                "portMappings": [
+                  {
+                    "containerPort": 3000,
+                    "hostPort": 3000,
+                    "protocol": "tcp"
+                  }
+                ]
+              }
+            ],
+            "requiresCompatibilities": ["FARGATE"],
+            "cpu": "256",
+            "memory": "512",
+            "executionRoleArn": "${{ steps.create-execution-role.outputs.execution_role_arn }}",
+            "taskRoleArn": "${{ steps.create-task-role.outputs.task_role_arn }}"
+          }
+          EOF
+          )
+          echo "$task_definition" > task-definition.json
+          response=$(aws ecs register-task-definition --cli-input-json file://task-definition.json)
+          echo "Registered new task definition: $(echo $response | jq -r .taskDefinition.taskDefinitionArn)"
+          echo "::set-output name=task_definition_arn::$(echo $response | jq -r .taskDefinition.taskDefinitionArn)"
+
+      # Update ECS service to use the new task definition (Fargate)
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
+            --service ${{ secrets.ECS_SERVICE_NAME }} \
+            --task-definition ${{ steps.register-task.outputs.task_definition_arn }} \
+            --desired-count 1 \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.ECS_SUBNET_ID }}],securityGroups=[${{ secrets.ECS_SECURITY_GROUP_ID }}],assignPublicIp=ENABLED}" \
+            --force-new-deployment
