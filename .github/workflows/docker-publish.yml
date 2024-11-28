@@ -1,0 +1,38 @@
+name: Build and Push Docker Image to ECR
+
+on:
+  push:
+    branches:
+      - main  # Trigger the action on push to main branch (you can adjust this)
+  pull_request:
+    branches:
+      - main  # Optional: Trigger action on PR to main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Checkout the code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Set up Docker Buildx (useful for multi-platform builds)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    # Log in to AWS ECR
+    - name: Log in to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v1
+
+    # Build Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.ECR_REPOSITORY_URI }} .
+      
+    # Push Docker image to ECR
+    - name: Push Docker image to ECR
+      run: |
+        docker tag ${{ secrets.ECR_REPOSITORY_URI }}:latest ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
+        docker push ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
+
