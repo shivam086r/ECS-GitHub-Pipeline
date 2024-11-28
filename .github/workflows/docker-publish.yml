@@ -3,7 +3,7 @@ name: Build and Push Docker Image to ECR
 on:
   push:
     branches:
-      - main  # Trigger the action on push to main branch (you can adjust this)
+      - main  # Trigger the action on push to main branch (adjust as needed)
   pull_request:
     branches:
       - main  # Optional: Trigger action on PR to main branch
@@ -17,11 +17,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # Set up Docker Buildx (useful for multi-platform builds)
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+    # Set up AWS credentials (hardcode the region here)
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: 'us-west-2'  # Hardcoded region (replace with your region)
 
-    # Log in to AWS ECR
+    # Log in to Amazon ECR
     - name: Log in to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v1
 
@@ -29,10 +33,9 @@ jobs:
     - name: Build Docker image
       run: |
         docker build -t ${{ secrets.ECR_REPOSITORY_URI }} .
-      
+
     # Push Docker image to ECR
     - name: Push Docker image to ECR
       run: |
         docker tag ${{ secrets.ECR_REPOSITORY_URI }}:latest ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
         docker push ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
-
