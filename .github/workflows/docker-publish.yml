@@ -54,7 +54,7 @@ jobs:
               \"containerPort\": 3000,
               \"hostPort\": 3000,
               \"protocol\": \"tcp\"
-            }],
+            }]
           }]" \
           --requires-compatibilities FARGATE \
           --cpu 256 \
