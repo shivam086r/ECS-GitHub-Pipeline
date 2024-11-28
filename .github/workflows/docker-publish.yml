@@ -38,3 +38,15 @@ jobs:
       run: |
         docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
         docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+    - name: Update ECS Task Definition
+      run: |
+        # Update ECS task definition with the new image
+        IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}"
+        jq '.containerDefinitions[0].image = "'$IMAGE_URI'"' ecs-task-definition-template.json > task-definition.json
+        aws ecs register-task-definition --cli-input-json file://task-definition.json
+
+    - name: Update ECS Service
+      run: |
+        # Update the ECS service to use the new task definition
+        aws ecs update-service --cluster ${{ secrets.ECS_CLUSTER_NAME }} --service ${{ secrets.ECS_SERVICE_NAME }} --task-definition ${{ secrets.TASK_DEFINITION_NAME }}:${{ github.sha }}
