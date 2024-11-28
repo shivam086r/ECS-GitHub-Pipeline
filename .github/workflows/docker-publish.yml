@@ -41,7 +41,7 @@ jobs:
 
     - name: Update ECS Task Definition
       run: |
-        IMAGE_URI="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}"
+        IMAGE_URI="${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}"
         jq '.containerDefinitions[0].image = "'$IMAGE_URI'"' ecs-task-definition-template.json > task-definition.json
         
         # Register the new task definition and capture the revision number
