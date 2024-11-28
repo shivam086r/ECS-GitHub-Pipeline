@@ -1,12 +1,22 @@
 {
   "family": "practice-task-defination",
+  "networkMode": "awsvpc",  
+  "requiresCompatibilities": ["FARGATE"],  
+  "cpu": "512",
+  "memory": "1024",
   "containerDefinitions": [
     {
       "name": "practice-container",
       "image": "${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}",
+      "essential": true,
       "memory": 1024,
       "cpu": 512,
-      "essential": true
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000
+        }
+      ]
     }
   ]
 }
