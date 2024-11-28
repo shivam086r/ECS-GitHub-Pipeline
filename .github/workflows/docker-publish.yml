@@ -55,14 +55,6 @@ jobs:
               \"hostPort\": 3000,
               \"protocol\": \"tcp\"
             }],
-            \"logConfiguration\": {
-              \"logDriver\": \"awslogs\",
-              \"options\": {
-                \"awslogs-group\": \"/ecs/my-task-def\",
-                \"awslogs-region\": \"us-east-1\",
-                \"awslogs-stream-prefix\": \"ecs\"
-              }
-            }
           }]" \
           --requires-compatibilities FARGATE \
           --cpu 256 \
