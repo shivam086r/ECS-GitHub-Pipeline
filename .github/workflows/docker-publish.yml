@@ -40,11 +40,12 @@ jobs:
         docker tag ${{ secrets.ECR_REPOSITORY_URI }}:latest ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
         docker push ${{ secrets.ECR_REPOSITORY_URI }}:${{ github.sha }}
 
-    # Register new ECS task definition with the new image
+     # Register new ECS task definition with the new image
     - name: Register new ECS task definition
+      id: register_task_definition
       run: |
-        # Replace the task definition file with your JSON or use CLI commands to register dynamically
-        TASK_DEFINITION=$(aws ecs register-task-definition \
+        # Register the ECS task definition
+        TASK_DEFINITION_ARN=$(aws ecs register-task-definition \
           --family my-task-def \
           --container-definitions "[{
             \"name\": \"my-container\",
@@ -53,18 +54,23 @@ jobs:
             \"memory\": 512,
             \"essential\": true,
             \"portMappings\": [{
-              \"containerPort\": 3000,
+              \"containerPort\": 80,
               \"hostPort\": 80
             }]
           }]" \
           --query 'taskDefinition.taskDefinitionArn' \
           --output text)
-        echo "Registered new ECS task definition: $TASK_DEFINITION"
+        
+        # Output the task definition ARN for verification
+        echo "Registered ECS Task Definition: $TASK_DEFINITION_ARN"
+        
+        # Pass the Task Definition ARN to the next step
+        echo "TASK_DEFINITION_ARN=$TASK_DEFINITION_ARN" >> $GITHUB_ENV
 
     # Update ECS service to use the new task definition
     - name: Update ECS service with new task definition
       run: |
-        # Replace ECS service and cluster names with your actual values
+        # Use the TASK_DEFINITION_ARN variable from the previous step
         ecs_service_name="my-ecs-service"
         ecs_cluster_name="my-ecs-cluster"
         
@@ -72,7 +78,7 @@ jobs:
         aws ecs update-service \
           --cluster $ecs_cluster_name \
           --service $ecs_service_name \
-          --task-definition $TASK_DEFINITION \
+          --task-definition ${{ env.TASK_DEFINITION_ARN }} \
           --desired-count 1  # You can adjust the desired count based on your needs
 
         echo "ECS service updated with new task definition"
