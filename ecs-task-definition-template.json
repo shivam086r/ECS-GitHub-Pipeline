@@ -3,7 +3,7 @@
   "containerDefinitions": [
     {
       "name": "my-container",
-      "image": "637423375178.dkr.ecr.us-east-1.amazonaws.com/practice:60deaa1ab363ee6a2156661825955f9945731d68",  // The placeholder value will be replaced
+      "image": "637423375178.dkr.ecr.us-east-1.amazonaws.com/practice:60deaa1ab363ee6a2156661825955f9945731d68",
       "memory": 512,
       "cpu": 256,
       "essential": true
