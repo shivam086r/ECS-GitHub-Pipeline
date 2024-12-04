@@ -1,23 +1,40 @@
 {
-  "family": "practice-task-defination",
+  "family": "prod-promobile-app-admin-task-definition",
   "networkMode": "awsvpc",  
   "requiresCompatibilities": ["FARGATE"], 
-  "executionRoleArn": "arn:aws:iam::637423375178:role/ECSTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::059468672743:role/ecsTaskExecutionRole",
   "cpu": "512",
   "memory": "1024",
+  "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
   "containerDefinitions": [
     {
-      "name": "practice-container",
-      "image": "637423375178.dkr.ecr.us-east-1.amazonaws.com/practice:8e624d102f0eb111d72324f60825b9ee62d51cde",
-      "essential": true,
-      "memory": 1024,
-      "cpu": 512,
+      "name": "prod-promobile-app-admin-container",
+      "image": "059468672743.dkr.ecr.eu-north-1.amazonaws.com/promobile-admin-frontend-dev:ae032047d310158e7b82243d4457331f4e3dcbe0",
+      "essential": true,     
       "portMappings": [
         {
-          "containerPort": 3000,
-          "hostPort": 3000
+          "containerPort": 3001,
+          "hostPort": 3001
         }
-      ]
+      ],
+      "environmentFiles": [
+        {
+          "value": "arn:aws:s3:::myeuenvbucket/admin-frontend-dev.env",
+          "type": "s3"
+        }
+      ],
+      "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/prod-promobile-app-admin-task-definition",
+                    "awslogs-region": "eu-north-1",
+                    "awslogs-stream-prefix": "ecs"
+       }
+     }
     }
   ]
 }
+
