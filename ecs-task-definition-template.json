@@ -3,6 +3,7 @@
   "networkMode": "awsvpc",  
   "requiresCompatibilities": ["FARGATE"], 
   "executionRoleArn": "arn:aws:iam::059468672743:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::059468672743:role/ecsTaskExecutionRole",
   "cpu": "512",
   "memory": "1024",
   "runtimePlatform": {
@@ -37,4 +38,3 @@
     }
   ]
 }
-
