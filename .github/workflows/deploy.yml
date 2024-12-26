@@ -3,10 +3,10 @@ name: Build and Push Docker Image to ECR
 on:
   push:
     branches:
-      - main  # Trigger the action on push to main branch (adjust as needed)
+      - develop  # Trigger the Action on push to main branch (adjust as needed)
   pull_request:
     branches:
-      - main  # Optional: Trigger action on PR to main branch
+      - develop  # Optional: Trigger action on PR to main branch
 
 jobs:
   build:
@@ -17,13 +17,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # Set up AWS credentials (hardcode the region here)
+    # Set up AWS credentials 
     - name: Set up AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: 'us-east-1'  # Hardcoded region (replace with your region)
+        aws-region: 'eu-north-1'  
 
     # Log in to Amazon ECR
     - name: Log in to Amazon ECR
@@ -32,7 +32,7 @@ jobs:
     # Build Docker image
     - name: Build Docker image
       run: |
-        docker bld -t ${{ secrets.ECR_REPOSITORY }} .
+        docker buid -t ${{ secrets.ECR_REPOSITORY }} .
     # Push Docker image to ECR
     - name: Push Docker image to ECR
       run: |
@@ -56,3 +56,9 @@ jobs:
           --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
           --service ${{ secrets.ECS_SERVICE_NAME }} \
           --task-definition ${{ secrets.TASK_DEFINITION_NAME }}:${{ env.TASK_DEFINITION_REVISION }}
+          
+    - name: Wait for ECS Service Stability
+      run: |
+        aws ecs wait services-stable \
+          --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
+          --services ${{ secrets.ECS_SERVICE_NAME }}         
