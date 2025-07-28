@@ -49,7 +49,7 @@ docker login
 
 docker push srahangdale/node-docker-app
 
-###Pulling and Running Image###
+###Pulling and Running Image####
 
 docker pull image-name
 
