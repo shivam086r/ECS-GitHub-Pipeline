@@ -32,7 +32,7 @@ jobs:
     # Build Docker image
     - name: Build Docker image
       run: |
-        docker buid -t ${{ secrets.ECR_REPOSITORY }} .
+        docker build -t ${{ secrets.ECR_REPOSITORY }} .
     # Push Docker image to ECR
     - name: Push Docker image to ECR
       run: |
