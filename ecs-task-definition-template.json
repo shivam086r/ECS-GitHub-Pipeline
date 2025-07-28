@@ -1,37 +1,31 @@
 {
-  "family": "prod-promobile-app-admin-task-definition",
+  "family": "paybyte-merchant-service",
   "networkMode": "awsvpc",  
   "requiresCompatibilities": ["FARGATE"], 
-  "executionRoleArn": "arn:aws:iam::059468672743:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::059468672743:role/ecsTaskExecutionRole",
-  "cpu": "512",
-  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::476415713484:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::476415713484:role/ecsTaskExecutionRole",
+  "cpu": "256",
+  "memory": "512",
   "runtimePlatform": {
         "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
     },
   "containerDefinitions": [
     {
-      "name": "prod-promobile-app-admin-container",
-      "image": "059468672743.dkr.ecr.eu-north-1.amazonaws.com/promobile-admin-frontend-dev:ae032047d310158e7b82243d4457331f4e3dcbe0",
+      "name": "paybyte-merchant-service",
+      "image": "476415713484.dkr.ecr.us-east-1.amazonaws.com/test-repo:79dea136f3b8269b3e9913da738d993fee0371be",
       "essential": true,     
       "portMappings": [
         {
-          "containerPort": 3001,
-          "hostPort": 3001
-        }
-      ],
-      "environmentFiles": [
-        {
-          "value": "arn:aws:s3:::myeuenvbucket/admin-frontend-dev.env",
-          "type": "s3"
+          "containerPort": 3000,
+          "hostPort": 3000
         }
       ],
       "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "/ecs/prod-promobile-app-admin-task-definition",
-                    "awslogs-region": "eu-north-1",
+                    "awslogs-group": "/ecs/paybyte-merchant-service",
+                    "awslogs-region": "us-east-1",
                     "awslogs-stream-prefix": "ecs"
        }
      }
