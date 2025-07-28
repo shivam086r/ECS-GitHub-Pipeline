@@ -3,10 +3,10 @@ name: Build and Push Docker Image to ECR
 on:
   push:
     branches:
-      - develop  # Trigger the Action on push to main branch (adjust as needed)
+      - main  # Trigger the Action on push to main branch (adjust as needed)
   pull_request:
     branches:
-      - develop  # Optional: Trigger action on PR to main branch
+      - main  # Optional: Trigger action on PR to main branch
 
 jobs:
   build:
